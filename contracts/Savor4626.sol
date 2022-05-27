@@ -46,7 +46,7 @@ abstract contract Savor4626 is ERC20, ReentrancyGuard {
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Mapping that tracks how many shares are pending withdraw for each address in waitingOnWithdrawls
-    /// @dev To find the amount user can withdraw take balanceOf[owner] - sharesPending[owner]
+    /// @dev To find the amount user can still call to withdraw take balanceOf[owner]
     /// The value of all shares pending will be sent to the owner on the next harvest 
     mapping (address => uint256) public sharesPending;
 
@@ -101,8 +101,11 @@ abstract contract Savor4626 is ERC20, ReentrancyGuard {
         //Check to see if they have a pending withdraw for these shares
         require(balanceOf[owner] >= shares, "Not enough shares for this Withdraw");
 
+        //Will return whether we have enough funds on this chain to pay out the whole withdraw or not
         (bool _allAvailable, uint256 _amountAvailable) = beforeWithdraw(assets, receiver);
 
+        //Still burn all shares no matter what so they cannot be double spent
+        //Any shares that have not payed out are tracked under sharesPending mapping
         _burn(owner, shares);
 
         emit Withdraw(msg.sender, receiver, owner, assets, shares);
@@ -133,8 +136,11 @@ abstract contract Savor4626 is ERC20, ReentrancyGuard {
         //Check to see if they have a pending withdraw for these shares
         require(balanceOf[owner] >= shares, "Not enough shares for this Withdraw");
 
+        //Will return whether we have enough funds on this chain to pay out the whole withdraw or not
         (bool _allAvailable, uint256 _amountAvailable) = beforeWithdraw(assets, receiver);
 
+        //Still burn all shares no matter what so they cannot be double spent
+        //Any shares that have not payed out are tracked under sharesPending mapping
         _burn(owner, shares);
 
         emit Withdraw(msg.sender, receiver, owner, assets, shares);
@@ -151,7 +157,8 @@ abstract contract Savor4626 is ERC20, ReentrancyGuard {
     //////////////////////////////////////////////////////////////*/
 
     /// @notice the PPS scaled 1e18 for calculating shares to assets and back
-    /// @dev This number is s combination of total supply and assets accross all chains and can only be updated by the Keeper
+    /// @dev This number is s combination of total supply and assets accross all chains 
+    /// @dev Due to current limited cross chain data availability this can only be updated by the Keeper
     uint256 public virtualPrice;
 
     function totalAssets() public view virtual returns (uint256);
@@ -202,6 +209,7 @@ abstract contract Savor4626 is ERC20, ReentrancyGuard {
         return balanceOf[owner];
     }
 
+    /// @dev This is the function that should be used for checking user balances rather than the balanceOf() function
     function totalUserBalance(address owner) public view returns (uint256) {
         return balanceOf[owner] + sharesPending[owner];
     }

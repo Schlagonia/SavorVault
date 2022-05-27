@@ -364,6 +364,9 @@ contract SavorVault is Savor4626, Ownable {
                         DEPOSIT/WITHDRAWAL LOGIC
     //////////////////////////////////////////////////////////////*/
 
+    ///@notice called after any deposits/mint calls to check if funds should be routed to a strategy
+    /// @dev Checks if we have any strategys in the stack and if funds are supposed to be deployed on this chain
+    /// @dev will calculate the desired float and anything over that amount will be deposited in a strategy
     function afterDeposit(uint256, uint256) internal override {
         //If there are no strategies we cant deposit anything
         if(withdrawalStack.length == 0) return;
@@ -465,6 +468,7 @@ contract SavorVault is Savor4626, Ownable {
     }
 
     /// @notice Returns the total supply from the vaults on other chains
+    /// @dev not active due to current cross chain data contstraints
     function otherVaultsSupply() internal view returns (uint256) {}
 
     /// @notice Returns the total supply of all the chains in order to properly calculate PPS
@@ -493,6 +497,7 @@ contract SavorVault is Savor4626, Ownable {
     }
 
     /// @notice Returns the total amount of underlying the vaults on other chains hold
+    /// @dev not active due to current cross chain data contstraints
     function otherVaultsHoldings() internal view returns (uint256) {}
 
     /// @notice Calculates the total amount of underlying tokens the Vault holds accross chains.
@@ -548,7 +553,7 @@ contract SavorVault is Savor4626, Ownable {
     //////////////////////////////////////////////////////////////*/
 
     ///@notice Bool repersenting whether or not funds are currently deployed on this chain
-    /// @dev initially set to false and only changes on harvests when all funds are sent
+    /// @dev initially set to false and only changes on harvests once a strategy is added
     bool fundsDeployedOnThisChain = false;
 
     /// @notice Emitted after the Virtual price is updated
